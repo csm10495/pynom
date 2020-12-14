@@ -20,6 +20,18 @@ while True:
     with pn:
         do_something()
 ```
+
+# Advanced Usage Example
+```
+from pynom import PyNom
+pn = PyNom([ValueError], 5, throw_up_action=lambda ex: print(ex))
+while True:
+    # On the 6th value error will call the given throw_up_action
+    #  a CombinedException will be passed to the throw_up_action.
+    with pn:
+        do_something()
+```
+
 See [https://csm10495.github.io/pynom/](https://csm10495.github.io/pynom/) for full API documentation.
 
 ## License

@@ -23,7 +23,7 @@ setup(
     version=getVersion(),
     packages=['pynom'],
     license='MIT License',
-    python_requires='>=3,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*',
+    python_requires='>=3,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*',
     long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
     long_description_content_type="text/markdown",
     classifiers=[
@@ -35,5 +35,5 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     include_package_data = True,
-    install_requires=[],
+    install_requires=['pytest'],
 )

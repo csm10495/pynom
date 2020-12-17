@@ -35,12 +35,14 @@ class PyNom:
                        max_to_eat_before_throw_up: int,
                        throw_up_action:typing.Union[typing.Callable, None]=None):
         ''' Instantiate a PyNom object
-            exception_types_to_eat: A list of exception types that PyNom should eat.
-                Note that if PyNom.ALL_EXCEPTIONS is given, all exceptions will be eaten.
-                    Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.
-            max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
-            throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
-                If None is given, raise the CombinedException.
+
+            Args:
+                exception_types_to_eat: A list of exception types that PyNom should eat.
+                    Note that if PyNom.ALL_EXCEPTIONS is given, all exceptions will be eaten.
+                        Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.
+                max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
+                throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
+                    If None is given, raise the CombinedException.
         '''
         self.exception_types_to_eat = exception_types_to_eat if isinstance(exception_types_to_eat, (list, set)) else [exception_types_to_eat]
         self.max_to_eat_before_throw_up = max_to_eat_before_throw_up

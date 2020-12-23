@@ -56,23 +56,29 @@ class CombinedException(Exception):
 
 
 class PyNom:
-    # A special variable that corresponds with an exception type leading to all exceptions being eatten even if not listed in exception_types_to_eat
+    #: A special variable that corresponds with an exception type leading to all exceptions being eatten even if not listed in exception_types_to_eat
     ALL_EXCEPTIONS = &#39;ALL_EXCEPTIONS&#39;
 
     def __init__(self, exception_types_to_eat: list,
                        max_to_eat_before_throw_up: int,
-                       throw_up_action:typing.Union[typing.Callable, None]=None):
+                       throw_up_action:typing.Union[typing.Callable, None]=None,
+                       side_dish_action:typing.Union[typing.Callable, None]=None):
         &#39;&#39;&#39; Instantiate a PyNom object
-            exception_types_to_eat: A list of exception types that PyNom should eat.
-                Note that if PyNom.ALL_EXCEPTIONS is given, all exceptions will be eaten.
-                    Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.
-            max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
-            throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
-                If None is given, raise the CombinedException.
+
+            Args:
+                exception_types_to_eat: A list of exception types that PyNom should eat.
+                    Note that if PyNom.ALL_EXCEPTIONS is given, all exceptions will be eaten.
+                        Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.
+                max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
+                throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
+                    If None is given, raise the CombinedException.
+                side_dish_action: A callable to call when attempting to eat an exception. Note that performing the side_dish_action does
+                    not guarantee that a throw_up_action will not be called soon after. The callable should take one arg: an ExceptionInfo.
         &#39;&#39;&#39;
         self.exception_types_to_eat = exception_types_to_eat if isinstance(exception_types_to_eat, (list, set)) else [exception_types_to_eat]
         self.max_to_eat_before_throw_up = max_to_eat_before_throw_up
         self.throw_up_action = throw_up_action
+        self.side_dish_action = side_dish_action
         self._exception_information = collections.defaultdict(list)
 
     def _is_eating_all_exceptions(self):
@@ -87,9 +93,11 @@ class PyNom:
             return
 
         now = datetime.datetime.now()
-        self._exception_information[typ].append(ExceptionInfo(value,
-                                                              traceback,
-                                                              now))
+        ex_info = ExceptionInfo(value, traceback, now)
+        self._exception_information[typ].append(ex_info)
+
+        if self.side_dish_action is not None:
+            self.side_dish_action(ex_info)
 
         if len(self._exception_information[typ]) &gt; self.max_to_eat_before_throw_up:
             # define class here so it subclasses the type of the raised exception
@@ -182,38 +190,53 @@ class PyNom:
 </dd>
 <dt id="pynom.pynom.PyNom"><code class="flex name class">
 <span>class <span class="ident">PyNom</span></span>
-<span>(</span><span>exception_types_to_eat: list, max_to_eat_before_throw_up: int, throw_up_action: Union[Callable, NoneType] = None)</span>
+<span>(</span><span>exception_types_to_eat: list, max_to_eat_before_throw_up: int, throw_up_action: Union[Callable, NoneType] = None, side_dish_action: Union[Callable, NoneType] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Instantiate a PyNom object
-exception_types_to_eat: A list of exception types that PyNom should eat.
+<div class="desc"><p>Instantiate a PyNom object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>exception_types_to_eat</code></strong></dt>
+<dd>A list of exception types that PyNom should eat.
 Note that if PyNom.ALL_EXCEPTIONS is given, all exceptions will be eaten.
-Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.
-max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
-throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
-If None is given, raise the CombinedException.</p></div>
+Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.</dd>
+<dt><strong><code>max_to_eat_before_throwing_up</code></strong></dt>
+<dd>The max exceptions of a given type to eat before throwing up</dd>
+<dt><strong><code>throw_up_action</code></strong></dt>
+<dd>A callable to call when throwing up. The callable should take one arg (a CombinedException).
+If None is given, raise the CombinedException.</dd>
+<dt><strong><code>side_dish_action</code></strong></dt>
+<dd>A callable to call when attempting to eat an exception. Note that performing the side_dish_action does
+not guarantee that a throw_up_action will not be called soon after. The callable should take one arg: an ExceptionInfo.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PyNom:
-    # A special variable that corresponds with an exception type leading to all exceptions being eatten even if not listed in exception_types_to_eat
+    #: A special variable that corresponds with an exception type leading to all exceptions being eatten even if not listed in exception_types_to_eat
     ALL_EXCEPTIONS = &#39;ALL_EXCEPTIONS&#39;
 
     def __init__(self, exception_types_to_eat: list,
                        max_to_eat_before_throw_up: int,
-                       throw_up_action:typing.Union[typing.Callable, None]=None):
+                       throw_up_action:typing.Union[typing.Callable, None]=None,
+                       side_dish_action:typing.Union[typing.Callable, None]=None):
         &#39;&#39;&#39; Instantiate a PyNom object
-            exception_types_to_eat: A list of exception types that PyNom should eat.
-                Note that if PyNom.ALL_EXCEPTIONS is given, all exceptions will be eaten.
-                    Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.
-            max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
-            throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
-                If None is given, raise the CombinedException.
+
+            Args:
+                exception_types_to_eat: A list of exception types that PyNom should eat.
+                    Note that if PyNom.ALL_EXCEPTIONS is given, all exceptions will be eaten.
+                        Note 2: Passing the max_to_eat_before_throw_up for a given exception type will still lead to a throw up.
+                max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
+                throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
+                    If None is given, raise the CombinedException.
+                side_dish_action: A callable to call when attempting to eat an exception. Note that performing the side_dish_action does
+                    not guarantee that a throw_up_action will not be called soon after. The callable should take one arg: an ExceptionInfo.
         &#39;&#39;&#39;
         self.exception_types_to_eat = exception_types_to_eat if isinstance(exception_types_to_eat, (list, set)) else [exception_types_to_eat]
         self.max_to_eat_before_throw_up = max_to_eat_before_throw_up
         self.throw_up_action = throw_up_action
+        self.side_dish_action = side_dish_action
         self._exception_information = collections.defaultdict(list)
 
     def _is_eating_all_exceptions(self):
@@ -228,9 +251,11 @@ If None is given, raise the CombinedException.</p></div>
             return
 
         now = datetime.datetime.now()
-        self._exception_information[typ].append(ExceptionInfo(value,
-                                                              traceback,
-                                                              now))
+        ex_info = ExceptionInfo(value, traceback, now)
+        self._exception_information[typ].append(ex_info)
+
+        if self.side_dish_action is not None:
+            self.side_dish_action(ex_info)
 
         if len(self._exception_information[typ]) &gt; self.max_to_eat_before_throw_up:
             # define class here so it subclasses the type of the raised exception

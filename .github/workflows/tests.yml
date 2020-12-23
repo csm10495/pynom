@@ -70,6 +70,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.7
+        ref: 'master'
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
@@ -78,7 +79,6 @@ jobs:
     - name: Generate docs
       run: |
         cd $GITHUB_WORKSPACE
-        git checkout master || git checkout main
         ls
         python3 --version
         sudo apt-get install python3-setuptools -y
@@ -92,4 +92,4 @@ jobs:
         git add docs/* || true
         git add README.md || true
         git commit -a -m "Updating docs" || true
-        git push origin master || git push origin main
+        git push

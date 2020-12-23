@@ -1,3 +1,3 @@
 from pynom.pynom import PyNom, CombinedException, ExceptionInfo
 
-__version__ = '0.0.4'
+__version__ = '0.0.6'

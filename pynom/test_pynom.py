@@ -69,3 +69,31 @@ def test_pynom_wont_eat_not_listed_exception():
     with pytest.raises(EnvironmentError):
         with pynom:
             raise EnvironmentError
+
+def test_pynom_will_call_side_dish_action():
+    def side_dish_action(ex):
+        assert isinstance(ex, ExceptionInfo)
+        if side_dish_action.call_count == 1:
+            assert isinstance(ex.exception, RuntimeError)
+        elif side_dish_action.call_count == 2:
+            assert isinstance(ex.exception, ValueError)
+        elif side_dish_action.call_count == 3:
+            assert isinstance(ex.exception, EOFError)
+
+        side_dish_action.call_count += 1
+
+    side_dish_action.call_count = 1
+
+    pynom = PyNom(PyNom.ALL_EXCEPTIONS, 2, side_dish_action=side_dish_action)
+
+    with pynom:
+        raise RuntimeError
+    assert side_dish_action.call_count == 2
+
+    with pynom:
+        raise ValueError
+    assert side_dish_action.call_count == 3
+
+    with pynom:
+        raise EOFError
+    assert side_dish_action.call_count == 4

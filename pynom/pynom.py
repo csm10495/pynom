@@ -28,12 +28,13 @@ class CombinedException(Exception):
 
 
 class PyNom:
-    # A special variable that corresponds with an exception type leading to all exceptions being eatten even if not listed in exception_types_to_eat
+    #: A special variable that corresponds with an exception type leading to all exceptions being eatten even if not listed in exception_types_to_eat
     ALL_EXCEPTIONS = 'ALL_EXCEPTIONS'
 
     def __init__(self, exception_types_to_eat: list,
                        max_to_eat_before_throw_up: int,
-                       throw_up_action:typing.Union[typing.Callable, None]=None):
+                       throw_up_action:typing.Union[typing.Callable, None]=None,
+                       side_dish_action:typing.Union[typing.Callable, None]=None):
         ''' Instantiate a PyNom object
 
             Args:
@@ -43,10 +44,13 @@ class PyNom:
                 max_to_eat_before_throwing_up: The max exceptions of a given type to eat before throwing up
                 throw_up_action: A callable to call when throwing up. The callable should take one arg (a CombinedException).
                     If None is given, raise the CombinedException.
+                side_dish_action: A callable to call when attempting to eat an exception. Note that performing the side_dish_action does
+                    not guarantee that a throw_up_action will not be called soon after. The callable should take one arg: an ExceptionInfo.
         '''
         self.exception_types_to_eat = exception_types_to_eat if isinstance(exception_types_to_eat, (list, set)) else [exception_types_to_eat]
         self.max_to_eat_before_throw_up = max_to_eat_before_throw_up
         self.throw_up_action = throw_up_action
+        self.side_dish_action = side_dish_action
         self._exception_information = collections.defaultdict(list)
 
     def _is_eating_all_exceptions(self):
@@ -61,9 +65,11 @@ class PyNom:
             return
 
         now = datetime.datetime.now()
-        self._exception_information[typ].append(ExceptionInfo(value,
-                                                              traceback,
-                                                              now))
+        ex_info = ExceptionInfo(value, traceback, now)
+        self._exception_information[typ].append(ex_info)
+
+        if self.side_dish_action is not None:
+            self.side_dish_action(ex_info)
 
         if len(self._exception_information[typ]) > self.max_to_eat_before_throw_up:
             # define class here so it subclasses the type of the raised exception

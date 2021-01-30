@@ -98,6 +98,13 @@ def test_pynom_wont_eat_not_listed_exception():
         with pynom:
             raise EnvironmentError
 
+def test_no_exception_should_not_throw_up():
+    pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1, throw_up_action=lambda x: 1/0)
+
+    for i in range(3):
+        with pynom:
+            pass
+
 def test_pynom_will_call_side_dish_action():
     def side_dish_action(ex):
         assert isinstance(ex, ExceptionInfo)
@@ -124,7 +131,17 @@ def test_pynom_will_call_side_dish_action():
 
     with pynom:
         raise EOFError
-    assert side_dish_action.call_count == 4</code></pre>
+    assert side_dish_action.call_count == 4
+
+def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
+    def side_dish_action(ex):
+        raise Exception(&#34;side_dish_action should not have been called since there was no exception&#34;)
+
+    pynom = PyNom(PyNom.ALL_EXCEPTIONS, 2, side_dish_action=side_dish_action)
+
+    for i in range(10):
+        with pynom:
+            pass</code></pre>
 </details>
 </section>
 <section>
@@ -134,6 +151,23 @@ def test_pynom_will_call_side_dish_action():
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pynom.test_pynom.test_no_exception_should_not_throw_up"><code class="name flex">
+<span>def <span class="ident">test_no_exception_should_not_throw_up</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_no_exception_should_not_throw_up():
+    pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1, throw_up_action=lambda x: 1/0)
+
+    for i in range(3):
+        with pynom:
+            pass</code></pre>
+</details>
+</dd>
 <dt id="pynom.test_pynom.test_pynom_allows_a_single_exception_type"><code class="name flex">
 <span>def <span class="ident">test_pynom_allows_a_single_exception_type</span></span>(<span>)</span>
 </code></dt>
@@ -244,6 +278,26 @@ def test_pynom_will_call_side_dish_action():
     assert side_dish_action.call_count == 4</code></pre>
 </details>
 </dd>
+<dt id="pynom.test_pynom.test_pynom_will_not_call_side_dish_action_if_there_is_no_exception"><code class="name flex">
+<span>def <span class="ident">test_pynom_will_not_call_side_dish_action_if_there_is_no_exception</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
+    def side_dish_action(ex):
+        raise Exception(&#34;side_dish_action should not have been called since there was no exception&#34;)
+
+    pynom = PyNom(PyNom.ALL_EXCEPTIONS, 2, side_dish_action=side_dish_action)
+
+    for i in range(10):
+        with pynom:
+            pass</code></pre>
+</details>
+</dd>
 <dt id="pynom.test_pynom.test_pynom_wont_eat_not_listed_exception"><code class="name flex">
 <span>def <span class="ident">test_pynom_wont_eat_not_listed_exception</span></span>(<span>)</span>
 </code></dt>
@@ -309,10 +363,12 @@ def test_pynom_will_call_side_dish_action():
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pynom.test_pynom.test_no_exception_should_not_throw_up" href="#pynom.test_pynom.test_no_exception_should_not_throw_up">test_no_exception_should_not_throw_up</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_allows_a_single_exception_type" href="#pynom.test_pynom.test_pynom_allows_a_single_exception_type">test_pynom_allows_a_single_exception_type</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_can_eat_all_exceptions" href="#pynom.test_pynom.test_pynom_can_eat_all_exceptions">test_pynom_can_eat_all_exceptions</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_custom_throw_up_action" href="#pynom.test_pynom.test_pynom_custom_throw_up_action">test_pynom_custom_throw_up_action</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_will_call_side_dish_action" href="#pynom.test_pynom.test_pynom_will_call_side_dish_action">test_pynom_will_call_side_dish_action</a></code></li>
+<li><code><a title="pynom.test_pynom.test_pynom_will_not_call_side_dish_action_if_there_is_no_exception" href="#pynom.test_pynom.test_pynom_will_not_call_side_dish_action_if_there_is_no_exception">test_pynom_will_not_call_side_dish_action_if_there_is_no_exception</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_wont_eat_not_listed_exception" href="#pynom.test_pynom.test_pynom_wont_eat_not_listed_exception">test_pynom_wont_eat_not_listed_exception</a></code></li>
 <li><code><a title="pynom.test_pynom.test_simple_pynom" href="#pynom.test_pynom.test_simple_pynom">test_simple_pynom</a></code></li>
 </ul>

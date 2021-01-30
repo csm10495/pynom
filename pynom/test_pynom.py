@@ -70,6 +70,13 @@ def test_pynom_wont_eat_not_listed_exception():
         with pynom:
             raise EnvironmentError
 
+def test_no_exception_should_not_throw_up():
+    pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1, throw_up_action=lambda x: 1/0)
+
+    for i in range(3):
+        with pynom:
+            pass
+
 def test_pynom_will_call_side_dish_action():
     def side_dish_action(ex):
         assert isinstance(ex, ExceptionInfo)
@@ -97,3 +104,13 @@ def test_pynom_will_call_side_dish_action():
     with pynom:
         raise EOFError
     assert side_dish_action.call_count == 4
+
+def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
+    def side_dish_action(ex):
+        raise Exception("side_dish_action should not have been called since there was no exception")
+
+    pynom = PyNom(PyNom.ALL_EXCEPTIONS, 2, side_dish_action=side_dish_action)
+
+    for i in range(10):
+        with pynom:
+            pass

@@ -60,8 +60,8 @@ class PyNom:
         return self
 
     def __exit__(self, typ, value, traceback):
-        if typ not in self.exception_types_to_eat and not self._is_eating_all_exceptions():
-            # about to raise a not eaten exception
+        if (typ not in self.exception_types_to_eat and not self._is_eating_all_exceptions()) or value is None:
+            # about to raise a not eaten exception OR there is no exxception
             return
 
         now = datetime.datetime.now()

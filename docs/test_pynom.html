@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>pynom.test_pynom API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,13 +26,20 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import pytest
-from . import PyNom, CombinedException, ExceptionInfo
+<pre><code class="python">import datetime
+from typing import List
+from unittest.mock import MagicMock
+
+import pytest
+
+from . import CombinedException, ExceptionInfo, PyNom
+
 
 def test_pynom_allows_a_single_exception_type():
     pynom = PyNom(ZeroDivisionError, 3)
     assert pynom.exception_types_to_eat[0] == ZeroDivisionError
     assert len(pynom.exception_types_to_eat) == 1
+
 
 def test_simple_pynom():
     pynom = PyNom([ZeroDivisionError], 3)
@@ -45,14 +52,15 @@ def test_simple_pynom():
 
     try:
         with pynom:
-            1/ 0
+            1 / 0
     except Exception as ex:
         assert isinstance(ex, ZeroDivisionError)
         assert isinstance(ex, CombinedException)
     else:
-        assert 0, &#39;pynom did not raise&#39;
+        assert 0, &#34;pynom did not raise&#34;
 
     assert len(pynom._exception_information[ZeroDivisionError]) == 0
+
 
 def test_pynom_custom_throw_up_action():
     def throw_up_action(ex):
@@ -68,9 +76,10 @@ def test_pynom_custom_throw_up_action():
 
     with pytest.raises(ValueError):
         with pynom:
-            raise ValueError(&#39;i am the breaking point&#39;)
+            raise ValueError(&#34;i am the breaking point&#34;)
 
-    assert throw_up_action.val, &#39;throw_up_action was not called?&#39;
+    assert throw_up_action.val, &#34;throw_up_action was not called?&#34;
+
 
 def test_pynom_can_eat_all_exceptions():
     pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1)
@@ -91,6 +100,7 @@ def test_pynom_can_eat_all_exceptions():
         with pynom:
             raise ValueError
 
+
 def test_pynom_wont_eat_not_listed_exception():
     pynom = PyNom([ValueError], 1)
 
@@ -98,12 +108,14 @@ def test_pynom_wont_eat_not_listed_exception():
         with pynom:
             raise EnvironmentError
 
+
 def test_no_exception_should_not_throw_up():
-    pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1, throw_up_action=lambda x: 1/0)
+    pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1, throw_up_action=lambda x: 1 / 0)
 
     for i in range(3):
         with pynom:
             pass
+
 
 def test_pynom_will_call_side_dish_action():
     def side_dish_action(ex):
@@ -133,15 +145,96 @@ def test_pynom_will_call_side_dish_action():
         raise EOFError
     assert side_dish_action.call_count == 4
 
+
 def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
     def side_dish_action(ex):
-        raise Exception(&#34;side_dish_action should not have been called since there was no exception&#34;)
+        raise Exception(
+            &#34;side_dish_action should not have been called since there was no exception&#34;
+        )
 
     pynom = PyNom(PyNom.ALL_EXCEPTIONS, 2, side_dish_action=side_dish_action)
 
     for i in range(10):
         with pynom:
-            pass</code></pre>
+            pass
+
+
+def test_pynom_digestion_works():
+    digested: List[ExceptionInfo] = []
+
+    def digest_action(ex_info):
+        digested.append(ex_info)
+
+    pynom = PyNom(
+        PyNom.ALL_EXCEPTIONS,
+        3,
+        digest_action=digest_action,
+        digest_time=datetime.timedelta(microseconds=0.00000000000001),
+    )
+
+    # a fail here could mean not enough time passed (in which case add a tiny sleep)
+    for i in range(5):
+        with pynom:
+            raise ValueError()
+
+    assert len(digested) == 5
+    assert [type(ex_info.exception) for ex_info in digested] == [ValueError] * 5
+
+
+def test_pynom_digestion_too_slow():
+    digested: List[ExceptionInfo] = []
+
+    def digest_action(ex_info):
+        digested.append(ex_info)
+
+    pynom = PyNom(
+        PyNom.ALL_EXCEPTIONS,
+        3,
+        digest_action=digest_action,
+        digest_time=datetime.timedelta(seconds=1),
+    )
+
+    with pytest.raises(ValueError):
+        for i in range(5):
+            with pynom:
+                raise ValueError()
+
+
+def test_pynom_check_and_perform_digestion_digest_time_none():
+    pynom = PyNom(PyNom.ALL_EXCEPTIONS, 3, digest_action=MagicMock(), digest_time=None)
+    pynom._check_and_perform_digestion(ValueError, None)
+
+
+def test_pynom_check_and_perform_digestion_digest_time_works():
+    digested: List[ExceptionInfo] = []
+
+    def digest_action(ex_info):
+        digested.append(ex_info)
+
+    pynom = PyNom(
+        PyNom.ALL_EXCEPTIONS,
+        3,
+        digest_action=digest_action,
+        digest_time=datetime.timedelta(days=1),
+    )
+
+    for i in range(2):
+        with pynom:
+            raise ValueError()
+
+    pynom._check_and_perform_digestion(
+        ValueError, datetime.datetime.now() + datetime.timedelta(days=3)
+    )
+
+    assert len(digested) == 2
+    assert [type(ex_info.exception) for ex_info in digested] == [ValueError] * 2
+
+    for i in range(2):
+        with pynom:
+            raise ValueError()
+
+    assert len(digested) == 2
+    assert [type(ex_info.exception) for ex_info in digested] == [ValueError] * 2</code></pre>
 </details>
 </section>
 <section>
@@ -161,7 +254,7 @@ def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_no_exception_should_not_throw_up():
-    pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1, throw_up_action=lambda x: 1/0)
+    pynom = PyNom([PyNom.ALL_EXCEPTIONS], 1, throw_up_action=lambda x: 1 / 0)
 
     for i in range(3):
         with pynom:
@@ -212,6 +305,61 @@ def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
             raise ValueError</code></pre>
 </details>
 </dd>
+<dt id="pynom.test_pynom.test_pynom_check_and_perform_digestion_digest_time_none"><code class="name flex">
+<span>def <span class="ident">test_pynom_check_and_perform_digestion_digest_time_none</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_pynom_check_and_perform_digestion_digest_time_none():
+    pynom = PyNom(PyNom.ALL_EXCEPTIONS, 3, digest_action=MagicMock(), digest_time=None)
+    pynom._check_and_perform_digestion(ValueError, None)</code></pre>
+</details>
+</dd>
+<dt id="pynom.test_pynom.test_pynom_check_and_perform_digestion_digest_time_works"><code class="name flex">
+<span>def <span class="ident">test_pynom_check_and_perform_digestion_digest_time_works</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_pynom_check_and_perform_digestion_digest_time_works():
+    digested: List[ExceptionInfo] = []
+
+    def digest_action(ex_info):
+        digested.append(ex_info)
+
+    pynom = PyNom(
+        PyNom.ALL_EXCEPTIONS,
+        3,
+        digest_action=digest_action,
+        digest_time=datetime.timedelta(days=1),
+    )
+
+    for i in range(2):
+        with pynom:
+            raise ValueError()
+
+    pynom._check_and_perform_digestion(
+        ValueError, datetime.datetime.now() + datetime.timedelta(days=3)
+    )
+
+    assert len(digested) == 2
+    assert [type(ex_info.exception) for ex_info in digested] == [ValueError] * 2
+
+    for i in range(2):
+        with pynom:
+            raise ValueError()
+
+    assert len(digested) == 2
+    assert [type(ex_info.exception) for ex_info in digested] == [ValueError] * 2</code></pre>
+</details>
+</dd>
 <dt id="pynom.test_pynom.test_pynom_custom_throw_up_action"><code class="name flex">
 <span>def <span class="ident">test_pynom_custom_throw_up_action</span></span>(<span>)</span>
 </code></dt>
@@ -235,9 +383,68 @@ def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
 
     with pytest.raises(ValueError):
         with pynom:
-            raise ValueError(&#39;i am the breaking point&#39;)
+            raise ValueError(&#34;i am the breaking point&#34;)
 
-    assert throw_up_action.val, &#39;throw_up_action was not called?&#39;</code></pre>
+    assert throw_up_action.val, &#34;throw_up_action was not called?&#34;</code></pre>
+</details>
+</dd>
+<dt id="pynom.test_pynom.test_pynom_digestion_too_slow"><code class="name flex">
+<span>def <span class="ident">test_pynom_digestion_too_slow</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_pynom_digestion_too_slow():
+    digested: List[ExceptionInfo] = []
+
+    def digest_action(ex_info):
+        digested.append(ex_info)
+
+    pynom = PyNom(
+        PyNom.ALL_EXCEPTIONS,
+        3,
+        digest_action=digest_action,
+        digest_time=datetime.timedelta(seconds=1),
+    )
+
+    with pytest.raises(ValueError):
+        for i in range(5):
+            with pynom:
+                raise ValueError()</code></pre>
+</details>
+</dd>
+<dt id="pynom.test_pynom.test_pynom_digestion_works"><code class="name flex">
+<span>def <span class="ident">test_pynom_digestion_works</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_pynom_digestion_works():
+    digested: List[ExceptionInfo] = []
+
+    def digest_action(ex_info):
+        digested.append(ex_info)
+
+    pynom = PyNom(
+        PyNom.ALL_EXCEPTIONS,
+        3,
+        digest_action=digest_action,
+        digest_time=datetime.timedelta(microseconds=0.00000000000001),
+    )
+
+    # a fail here could mean not enough time passed (in which case add a tiny sleep)
+    for i in range(5):
+        with pynom:
+            raise ValueError()
+
+    assert len(digested) == 5
+    assert [type(ex_info.exception) for ex_info in digested] == [ValueError] * 5</code></pre>
 </details>
 </dd>
 <dt id="pynom.test_pynom.test_pynom_will_call_side_dish_action"><code class="name flex">
@@ -289,7 +496,9 @@ def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
 </summary>
 <pre><code class="python">def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
     def side_dish_action(ex):
-        raise Exception(&#34;side_dish_action should not have been called since there was no exception&#34;)
+        raise Exception(
+            &#34;side_dish_action should not have been called since there was no exception&#34;
+        )
 
     pynom = PyNom(PyNom.ALL_EXCEPTIONS, 2, side_dish_action=side_dish_action)
 
@@ -335,12 +544,12 @@ def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
 
     try:
         with pynom:
-            1/ 0
+            1 / 0
     except Exception as ex:
         assert isinstance(ex, ZeroDivisionError)
         assert isinstance(ex, CombinedException)
     else:
-        assert 0, &#39;pynom did not raise&#39;
+        assert 0, &#34;pynom did not raise&#34;
 
     assert len(pynom._exception_information[ZeroDivisionError]) == 0</code></pre>
 </details>
@@ -366,7 +575,11 @@ def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
 <li><code><a title="pynom.test_pynom.test_no_exception_should_not_throw_up" href="#pynom.test_pynom.test_no_exception_should_not_throw_up">test_no_exception_should_not_throw_up</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_allows_a_single_exception_type" href="#pynom.test_pynom.test_pynom_allows_a_single_exception_type">test_pynom_allows_a_single_exception_type</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_can_eat_all_exceptions" href="#pynom.test_pynom.test_pynom_can_eat_all_exceptions">test_pynom_can_eat_all_exceptions</a></code></li>
+<li><code><a title="pynom.test_pynom.test_pynom_check_and_perform_digestion_digest_time_none" href="#pynom.test_pynom.test_pynom_check_and_perform_digestion_digest_time_none">test_pynom_check_and_perform_digestion_digest_time_none</a></code></li>
+<li><code><a title="pynom.test_pynom.test_pynom_check_and_perform_digestion_digest_time_works" href="#pynom.test_pynom.test_pynom_check_and_perform_digestion_digest_time_works">test_pynom_check_and_perform_digestion_digest_time_works</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_custom_throw_up_action" href="#pynom.test_pynom.test_pynom_custom_throw_up_action">test_pynom_custom_throw_up_action</a></code></li>
+<li><code><a title="pynom.test_pynom.test_pynom_digestion_too_slow" href="#pynom.test_pynom.test_pynom_digestion_too_slow">test_pynom_digestion_too_slow</a></code></li>
+<li><code><a title="pynom.test_pynom.test_pynom_digestion_works" href="#pynom.test_pynom.test_pynom_digestion_works">test_pynom_digestion_works</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_will_call_side_dish_action" href="#pynom.test_pynom.test_pynom_will_call_side_dish_action">test_pynom_will_call_side_dish_action</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_will_not_call_side_dish_action_if_there_is_no_exception" href="#pynom.test_pynom.test_pynom_will_not_call_side_dish_action_if_there_is_no_exception">test_pynom_will_not_call_side_dish_action_if_there_is_no_exception</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_wont_eat_not_listed_exception" href="#pynom.test_pynom.test_pynom_wont_eat_not_listed_exception">test_pynom_wont_eat_not_listed_exception</a></code></li>
@@ -377,7 +590,7 @@ def test_pynom_will_not_call_side_dish_action_if_there_is_no_exception():
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

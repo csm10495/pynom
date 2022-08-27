@@ -16,10 +16,7 @@ class ExceptionInfo:
 
     def __str__(self):
         ret_str = f"{type(self.exception).__name__}: thrown at {self.time_stamp}\n"
-        ret_str += "  " + str(self.exception).replace("\n", "\n  ").rstrip(" ")
-        ret_str += "    " + ("\n".join(traceback.format_tb(self.traceback))).replace(
-            "\n", "\n   "
-        ).rstrip(" ")
+        ret_str += ''.join(traceback.format_exception(type(self.exception), self.exception, self.traceback))
         return ret_str
 
 
@@ -31,7 +28,7 @@ class CombinedException(Exception):
 
     def __str__(self):
         return "CombinedException:\n  " + (
-            "\n".join([str(a) for a in self.exception_infos])
+            "\n----------\n".join([str(a) for a in self.exception_infos])
         ).replace("\n", "\n  ").rstrip(" ")
 
 

@@ -34,6 +34,19 @@ def test_simple_pynom():
     assert len(pynom._exception_information[ZeroDivisionError]) == 0
 
 
+def test_combined_exception_has_sub_exception():
+    pynom = PyNom([ZeroDivisionError], 3)
+
+    with pynom:
+        try:
+            raise ValueError()
+        except:
+            1 / 0
+
+    ex = pynom._exception_information[ZeroDivisionError][0]
+    assert "ValueError" in str(ex)
+
+
 def test_pynom_custom_throw_up_action():
     def throw_up_action(ex):
         assert isinstance(ex, CombinedException)

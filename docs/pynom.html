@@ -44,10 +44,7 @@ class ExceptionInfo:
 
     def __str__(self):
         ret_str = f&#34;{type(self.exception).__name__}: thrown at {self.time_stamp}\n&#34;
-        ret_str += &#34;  &#34; + str(self.exception).replace(&#34;\n&#34;, &#34;\n  &#34;).rstrip(&#34; &#34;)
-        ret_str += &#34;    &#34; + (&#34;\n&#34;.join(traceback.format_tb(self.traceback))).replace(
-            &#34;\n&#34;, &#34;\n   &#34;
-        ).rstrip(&#34; &#34;)
+        ret_str += &#39;&#39;.join(traceback.format_exception(type(self.exception), self.exception, self.traceback))
         return ret_str
 
 
@@ -59,7 +56,7 @@ class CombinedException(Exception):
 
     def __str__(self):
         return &#34;CombinedException:\n  &#34; + (
-            &#34;\n&#34;.join([str(a) for a in self.exception_infos])
+            &#34;\n----------\n&#34;.join([str(a) for a in self.exception_infos])
         ).replace(&#34;\n&#34;, &#34;\n  &#34;).rstrip(&#34; &#34;)
 
 
@@ -190,7 +187,7 @@ class PyNom:
 
     def __str__(self):
         return &#34;CombinedException:\n  &#34; + (
-            &#34;\n&#34;.join([str(a) for a in self.exception_infos])
+            &#34;\n----------\n&#34;.join([str(a) for a in self.exception_infos])
         ).replace(&#34;\n&#34;, &#34;\n  &#34;).rstrip(&#34; &#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -218,10 +215,7 @@ class PyNom:
 
     def __str__(self):
         ret_str = f&#34;{type(self.exception).__name__}: thrown at {self.time_stamp}\n&#34;
-        ret_str += &#34;  &#34; + str(self.exception).replace(&#34;\n&#34;, &#34;\n  &#34;).rstrip(&#34; &#34;)
-        ret_str += &#34;    &#34; + (&#34;\n&#34;.join(traceback.format_tb(self.traceback))).replace(
-            &#34;\n&#34;, &#34;\n   &#34;
-        ).rstrip(&#34; &#34;)
+        ret_str += &#39;&#39;.join(traceback.format_exception(type(self.exception), self.exception, self.traceback))
         return ret_str</code></pre>
 </details>
 <h3>Class variables</h3>

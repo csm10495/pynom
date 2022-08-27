@@ -62,6 +62,19 @@ def test_simple_pynom():
     assert len(pynom._exception_information[ZeroDivisionError]) == 0
 
 
+def test_combined_exception_has_sub_exception():
+    pynom = PyNom([ZeroDivisionError], 3)
+
+    with pynom:
+        try:
+            raise ValueError()
+        except:
+            1 / 0
+
+    ex = pynom._exception_information[ZeroDivisionError][0]
+    assert &#34;ValueError&#34; in str(ex)
+
+
 def test_pynom_custom_throw_up_action():
     def throw_up_action(ex):
         assert isinstance(ex, CombinedException)
@@ -244,6 +257,28 @@ def test_pynom_check_and_perform_digestion_digest_time_works():
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pynom.test_pynom.test_combined_exception_has_sub_exception"><code class="name flex">
+<span>def <span class="ident">test_combined_exception_has_sub_exception</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_combined_exception_has_sub_exception():
+    pynom = PyNom([ZeroDivisionError], 3)
+
+    with pynom:
+        try:
+            raise ValueError()
+        except:
+            1 / 0
+
+    ex = pynom._exception_information[ZeroDivisionError][0]
+    assert &#34;ValueError&#34; in str(ex)</code></pre>
+</details>
+</dd>
 <dt id="pynom.test_pynom.test_no_exception_should_not_throw_up"><code class="name flex">
 <span>def <span class="ident">test_no_exception_should_not_throw_up</span></span>(<span>)</span>
 </code></dt>
@@ -572,6 +607,7 @@ def test_pynom_check_and_perform_digestion_digest_time_works():
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pynom.test_pynom.test_combined_exception_has_sub_exception" href="#pynom.test_pynom.test_combined_exception_has_sub_exception">test_combined_exception_has_sub_exception</a></code></li>
 <li><code><a title="pynom.test_pynom.test_no_exception_should_not_throw_up" href="#pynom.test_pynom.test_no_exception_should_not_throw_up">test_no_exception_should_not_throw_up</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_allows_a_single_exception_type" href="#pynom.test_pynom.test_pynom_allows_a_single_exception_type">test_pynom_allows_a_single_exception_type</a></code></li>
 <li><code><a title="pynom.test_pynom.test_pynom_can_eat_all_exceptions" href="#pynom.test_pynom.test_pynom_can_eat_all_exceptions">test_pynom_can_eat_all_exceptions</a></code></li>

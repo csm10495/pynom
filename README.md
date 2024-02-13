@@ -1,5 +1,8 @@
 ![Run tests](https://github.com/csm10495/pynom/workflows/Run%20tests/badge.svg) [![PyPI version](https://badge.fury.io/py/pynom.svg)](https://badge.fury.io/py/pynom)
 
+# Update: 
+As of Feb 2024, I'm archiving this project. Consider using [backoff](https://github.com/litl/backoff) instead.
+
 # PyNom
 
 A simple library to eat exceptions, until enough of a given exception type has been raised. The name has the word 'Nom' in it because it can sometimes sound like a person eating.
